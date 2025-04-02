@@ -11,6 +11,32 @@ A thread-safe rate limiter implementation in Rust using Redis as the backend sto
 - Built-in methods to check remaining requests and time windows
 - Comprehensive test suite
 
+## Algorithm
+
+The rate limiter uses a sliding window algorithm implemented with Redis. Here's how it works:
+
+1. Each identifier (e.g., user, IP) gets a unique Redis key with the format `{prefix}:{identifier}`
+2. The key stores a counter that tracks the number of requests
+3. The key has a TTL (Time To Live) equal to the rate limit window
+4. When a request comes in:
+   - If the key doesn't exist, it's created with a counter of 1 and the window TTL
+   - If the key exists and the counter is below the limit, the counter is incremented
+   - If the key exists and the counter has reached the limit, the request is rejected
+   - If the key has expired (TTL = 0), it's treated as a new key
+
+The implementation uses Redis Lua scripts to ensure atomic operations, preventing race conditions in concurrent scenarios. The script:
+1. Checks if the key exists
+2. If it doesn't exist, creates it with initial count of 1
+3. If it exists, checks if we've hit the limit
+4. If we haven't hit the limit, increments the counter
+5. Sets/updates the TTL on the key
+
+This approach provides:
+- Accurate rate limiting
+- No memory leaks (keys automatically expire)
+- Thread-safe operations
+- Minimal Redis operations (single atomic script)
+
 ## Installation
 
 Add this to your `Cargo.toml`:
