@@ -1,0 +1,8 @@
+[package]
+name = "redis_rate_limiter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+redis = { version = "0.24", features = ["tokio-comp"] } # Or just "redis = "0.24"" for synchronous
+thiserror = "1.0"
